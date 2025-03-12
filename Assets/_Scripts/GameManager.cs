@@ -46,7 +46,7 @@ public class GameManager : SingletonMonoBehavior<GameManager>
     {
             damageParticleInstance = Instantiate(damageParticles, spawnPosition, Quaternion.identity);
 
-            damageParticleInstance.Play();
+            // damageParticleInstance.Play();
     }
     
     public void KillBall()
