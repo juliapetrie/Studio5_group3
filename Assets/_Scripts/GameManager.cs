@@ -5,9 +5,11 @@ public class GameManager : SingletonMonoBehavior<GameManager>
     [SerializeField] private int maxLives = 3;
     [SerializeField] private Ball ball;
     [SerializeField] private Transform bricksContainer;
+    [SerializeField] private ParticleSystem damageParticles;
 
     private int currentBrickCount;
     private int totalBrickCount;
+    private ParticleSystem damageParticleInstance; 
 
     private void OnEnable()
     {
@@ -29,15 +31,24 @@ public class GameManager : SingletonMonoBehavior<GameManager>
 
     public void OnBrickDestroyed(Vector3 position)
     {
-        // fire audio here
-        // implement particle effect here
+        // fire audio here     
+        
         currentBrickCount--;
         Debug.Log($"Destroyed Brick at {position}, {currentBrickCount}/{totalBrickCount} remaining");
          //Camera Shake
         CameraShake.Shake(0.2f, 0.1f);
         if(currentBrickCount == 0) SceneHandler.Instance.LoadNextScene();
+        //particle system
+        SpawnDamageParticles(position);
     }
 
+    private void SpawnDamageParticles(Vector3 spawnPosition)
+    {
+            damageParticleInstance = Instantiate(damageParticles, spawnPosition, Quaternion.identity);
+
+            // damageParticleInstance.Play();
+    }
+    
     public void KillBall()
     {
         maxLives--;
