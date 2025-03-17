@@ -8,6 +8,8 @@ public class GameManager : SingletonMonoBehavior<GameManager>
     [SerializeField] private Transform bricksContainer;
     [SerializeField] private ParticleSystem damageParticles;
     [SerializeField] private LiveCounterUI liveCounterUI;
+    [SerializeField] private int score;
+    [SerializeField] private ScoreCounterUI scoreCounter;
 
     public GameObject gameOverUI;
 
@@ -81,5 +83,11 @@ public class GameManager : SingletonMonoBehavior<GameManager>
         
         SceneHandler.Instance.LoadMenuScene();
         Time.timeScale = 1f;
+    }
+
+    public void IncreaseScore()
+    {
+        score++;
+        scoreCounter.UpdateScore(score);
     }
 }
