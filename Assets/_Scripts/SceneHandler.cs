@@ -34,7 +34,9 @@ public class SceneHandler : SingletonMonoBehavior<SceneHandler>
     {
         if(nextLevelIndex >= levels.Count)
         {
+            AudioManager.Instance.PlayGameWonSound();
             LoadMenuScene();
+            
         }
         else
         {
@@ -55,5 +57,15 @@ public class SceneHandler : SingletonMonoBehavior<SceneHandler>
     {
         yield return new WaitForSeconds(animationDuration);
         SceneManager.LoadScene(scene);
+    }
+    //For audio transition
+    public float GetAnimationDuration()
+    {
+        return animationDuration;
+    }
+    //Probably not necessary but changing menuScene string to public might be issue
+    public string GetMenuSceneName()
+    {
+        return menuScene;
     }
 }

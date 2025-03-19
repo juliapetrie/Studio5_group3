@@ -16,12 +16,21 @@ public class Ball : MonoBehaviour
     {
         if(other.gameObject.CompareTag("Paddle"))
         {
+            // Was easier to add it into here
+            AudioManager.Instance.PlayPaddleHitSound();
+            // _______
+
             Vector3 directionToFire = (transform.position - other.transform.position).normalized;
             float angleOfContact = Vector3.Angle(transform.forward, directionToFire);
             float returnSpeed = Mathf.Lerp(minBallBounceBackSpeed, maxBallBounceBackSpeed, angleOfContact / 90f);
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             rb.AddForce(directionToFire * returnSpeed, ForceMode.Impulse);
+        }
+        else if (other.gameObject.CompareTag("Wall"))
+        {
+            // For wall sound
+            AudioManager.Instance.PlayWallHitSound();
         }
     }
 

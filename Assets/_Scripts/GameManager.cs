@@ -38,7 +38,8 @@ public class GameManager : SingletonMonoBehavior<GameManager>
     public void OnBrickDestroyed(Vector3 position)
     {
         // fire audio here     
-        
+        AudioManager.Instance.PlayBrickDestroyedSound();
+
         currentBrickCount--;
         Debug.Log($"Destroyed Brick at {position}, {currentBrickCount}/{totalBrickCount} remaining");
          //Camera Shake
@@ -57,11 +58,13 @@ public class GameManager : SingletonMonoBehavior<GameManager>
     
     public void KillBall()
     {
+        AudioManager.Instance.PlayLifeLostSound(); 
         maxLives--;
         liveCounterUI.UpdateLives(maxLives);
         // update lives on HUD here
         // game over UI if maxLives < 0, then exit to main menu after delay
-        if (maxLives < 0)
+        
+        if (maxLives <= 0)
         {
             StartCoroutine(GameOverSequence());
         }
@@ -73,6 +76,7 @@ public class GameManager : SingletonMonoBehavior<GameManager>
 
     private IEnumerator GameOverSequence()
     {
+        AudioManager.Instance.PlayGameOverSound();
         Time.timeScale = 0f;
         gameOverUI.SetActive(true);
 
