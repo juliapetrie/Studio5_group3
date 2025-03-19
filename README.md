@@ -1,7 +1,7 @@
 # Studio5 - Group3
 - Julia Petrie 29617347: camera shake and particle system
-- Stefan Spataro 56862295: game over scene
-- Ivona Nicetin 87205910: score and lives
+- Stefan Spataro 56862295: game over scene and lives
+- Ivona Nicetin 87205910: score
 - Daniel Storozhuk 74456278: audio
 
 
