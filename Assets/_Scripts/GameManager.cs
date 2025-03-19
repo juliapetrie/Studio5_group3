@@ -64,7 +64,7 @@ public class GameManager : SingletonMonoBehavior<GameManager>
         // update lives on HUD here
         // game over UI if maxLives < 0, then exit to main menu after delay
         
-        if (maxLives < 0)
+        if (maxLives <= 0)
         {
             StartCoroutine(GameOverSequence());
         }
@@ -76,7 +76,7 @@ public class GameManager : SingletonMonoBehavior<GameManager>
 
     private IEnumerator GameOverSequence()
     {
-       // AudioManager.Instance.PlayGameOverSound();
+        AudioManager.Instance.PlayGameOverSound();
         Time.timeScale = 0f;
         gameOverUI.SetActive(true);
 

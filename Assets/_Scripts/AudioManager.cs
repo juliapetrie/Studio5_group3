@@ -1,90 +1,165 @@
 using UnityEngine;
+using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class AudioManager : SingletonMonoBehavior<AudioManager>
 {
     [Header("Game Event Sounds")]
     [SerializeField] private AudioClip gameOverSound;
-    [SerializeField] private AudioClip gameWinSound;
     [SerializeField] private AudioClip lifeLostSound;
     [SerializeField] private AudioClip brickDestroyedSound;
+    [SerializeField] private AudioClip gameWonSound;
 
     [Header("Collision Sounds")]
     [SerializeField] private AudioClip paddleHitSound;
     [SerializeField] private AudioClip wallHitSound;
 
-    [Header("Background Music")]
-    [SerializeField] private AudioClip backgroundMusic;
+    [Header("Music")]
+    [SerializeField] private AudioClip menuMusic;
+    [SerializeField] private AudioClip gameMusic;
+    [SerializeField] private string menuSceneName = "Menu";
 
-    [Header("Audio Sources")]
-    [SerializeField] private AudioSource sfxSource;
-    [SerializeField] private AudioSource musicSource;
+    private AudioSource sfxSource;
+    private AudioSource musicSource;
+    private Coroutine musicTransitionCoroutine;
 
-    [Header("Volume Settings")]
-    [Range(0f, 1f)]
-    [SerializeField] private float sfxVolume = 1f;
-    [Range(0f, 1f)]
-    [SerializeField] private float musicVolume = 0.5f;
+    protected override void Awake()
+    {
+        base.Awake();
+
+        sfxSource = gameObject.AddComponent<AudioSource>();
+        musicSource = gameObject.AddComponent<AudioSource>();
+        musicSource.loop = true;
+
+        DontDestroyOnLoad(gameObject);
+    }
 
     private void Start()
     {
-        // Set initial volumes
-        sfxSource.volume = sfxVolume;
-        musicSource.volume = musicVolume;
+        // Initial music setup based on current scene
+        UpdateMusicForCurrentScene();
+    }
 
-        // Loop music (edit to end if game over)
-        if (backgroundMusic != null)
+    private void OnEnable()
+    {
+        // Re-add the scene loaded event
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // Use a slight delay to make sure scene is fully loaded
+        StartCoroutine(UpdateMusicAfterDelay(0.1f));
+    }
+
+    private IEnumerator UpdateMusicAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        UpdateMusicForCurrentScene();
+    }
+
+    private void UpdateMusicForCurrentScene()
+    {
+        string currentScene = SceneManager.GetActiveScene().name;
+        string menuScene = menuSceneName;
+
+        if (SceneHandler.Instance != null)
+            menuScene = SceneHandler.Instance.GetMenuSceneName();
+
+        Debug.Log($"Scene changed to: {currentScene}, menu scene is: {menuScene}");
+
+        if (currentScene == menuScene)
+            PlayMenuMusic();
+        else
+            PlayGameMusic();
+    }
+
+    // SFX methods
+    public void PlayGameOverSound() => sfxSource.PlayOneShot(gameOverSound);
+    public void PlayLifeLostSound() => sfxSource.PlayOneShot(lifeLostSound);
+    public void PlayBrickDestroyedSound() => sfxSource.PlayOneShot(brickDestroyedSound);
+    public void PlayPaddleHitSound() => sfxSource.PlayOneShot(paddleHitSound);
+    public void PlayWallHitSound() => sfxSource.PlayOneShot(wallHitSound);
+    public void PlayGameWonSound() => sfxSource.PlayOneShot(gameWonSound);
+
+    // Music methods
+    public void PlayMenuMusic(bool withTransition = true)
+    {
+        Debug.Log("Playing menu music");
+        TransitionToMusic(menuMusic, withTransition);
+    }
+
+    public void PlayGameMusic(bool withTransition = true)
+    {
+        Debug.Log("Playing game music");
+        TransitionToMusic(gameMusic, withTransition);
+    }
+
+    // This is unnecessary and complicated but I felt like doing it
+    public void TransitionToMusic(AudioClip newMusic, bool withTransition = true)
+    {
+        if (newMusic == null)
         {
-            musicSource.clip = backgroundMusic;
-            musicSource.loop = true;
+            Debug.LogWarning("Trying to play null music clip");
+            return;
+        }
+
+        // If already playing this music, don't do anything
+        if (musicSource.clip == newMusic && musicSource.isPlaying)
+        {
+            Debug.Log("Already playing requested music");
+            return;
+        }
+
+        // Stop existing transition
+        if (musicTransitionCoroutine != null)
+            StopCoroutine(musicTransitionCoroutine);
+
+        float duration = 1.0f;
+        if (SceneHandler.Instance != null)
+            duration = SceneHandler.Instance.GetAnimationDuration();
+
+        if (withTransition)
+            musicTransitionCoroutine = StartCoroutine(CrossFadeMusic(newMusic, duration));
+        else
+        {
+            musicSource.clip = newMusic;
             musicSource.Play();
         }
     }
 
-    public void SetSFXVolume(float volume)
+    private IEnumerator CrossFadeMusic(AudioClip newMusic, float duration)
     {
-        sfxVolume = Mathf.Clamp01(volume);
-        sfxSource.volume = sfxVolume;
-    }
+        float currentTime = 0;
+        float startVolume = musicSource.volume;
 
-    public void SetMusicVolume(float volume)
-    {
-        musicVolume = Mathf.Clamp01(volume);
-        musicSource.volume = musicVolume;
-    }
+        // Fade out current music
+        if (musicSource.isPlaying)
+        {
+            while (currentTime < duration)
+            {
+                currentTime += Time.deltaTime;
+                musicSource.volume = Mathf.Lerp(startVolume, 0, currentTime / duration);
+                yield return null;
+            }
+        }
 
-    public void PlayGameOverSound()
-    { //ToDO
-        if (gameOverSound != null)
-            sfxSource.PlayOneShot(gameOverSound);
-    }
+        // Switch to new clip and fade in
+        musicSource.clip = newMusic;
+        musicSource.Play();
+        musicSource.volume = 0;
 
-    public void PlayGameWinSound()
-    {
-        if (gameWinSound != null)
-            sfxSource.PlayOneShot(gameWinSound);
-    }
-
-    public void PlayLifeLostSound()
-    {
-        if (lifeLostSound != null)
-            sfxSource.PlayOneShot(lifeLostSound);
-    }
-
-    public void PlayBrickDestroyedSound()
-    {
-        if (brickDestroyedSound != null)
-            sfxSource.PlayOneShot(brickDestroyedSound);
-    }
-
-    public void PlayPaddleHitSound()
-    {
-        if (paddleHitSound != null)
-            sfxSource.PlayOneShot(paddleHitSound);
-    }
-
-    public void PlayWallHitSound()
-    {
-        if (wallHitSound != null)
-            sfxSource.PlayOneShot(wallHitSound);
+        currentTime = 0;
+        while (currentTime < duration)
+        {
+            currentTime += Time.deltaTime;
+            musicSource.volume = Mathf.Lerp(0, 1, currentTime / duration);
+            yield return null;
+        }
     }
 }
