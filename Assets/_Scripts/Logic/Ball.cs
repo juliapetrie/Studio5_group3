@@ -6,12 +6,24 @@ public class Ball : MonoBehaviour
     [SerializeField] private float ballLaunchSpeed;
     [SerializeField] private float minBallBounceBackSpeed;
     [SerializeField] private float maxBallBounceBackSpeed;
+    [SerializeField] private float minYVelocity = 0.05f;
     [Header("References")]
     [SerializeField] private Transform ballAnchor;
     [SerializeField] private Rigidbody rb;
 
     private bool isBallActive;
-
+    //Had an issue where ball would get stuck - no y velocity, infinately bouncing left and right
+    private void Update()
+    {
+        // Check if the Y component of velocity is nearly zero but ball is still moving
+        if (Mathf.Abs(rb.linearVelocity.y) < 0.001f && rb.linearVelocity.magnitude > 0.1f)
+        {
+            // Add a tiny Y component in a random direction
+            Vector3 currentVelocity = rb.linearVelocity;
+            currentVelocity.y = minYVelocity * Mathf.Sign(Random.value - 0.5f);
+            rb.linearVelocity = currentVelocity;
+        }
+    }
     private void OnCollisionEnter(Collision other)
     {
         if(other.gameObject.CompareTag("Paddle"))
